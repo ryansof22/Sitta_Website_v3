@@ -1,21 +1,49 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>SITTA UT - Portal Pemesanan</title>
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-    <div class="navbar">
-        <span class="gold-text">SITTA UT APPS</span>
-    </div>
-    <div style="text-align: center; margin-top: 100px;">
-        <h1 class="gold-text">Selamat Datang di Sistem SITTA UT</h1>
-        <p>Silakan pilih menu layanan di bawah ini:</p>
-        <div style="margin-top: 30px;">
-            <a href="stok.html"><button>Manajemen Stok Bahan Ajar</button></a>
-            <a href="tracking.html"><button>Tracking Delivery Order</button></a>
+<div class="component-box">
+    <h3>Formulir Pemesanan Bahan Ajar Baru</h3>
+    
+    <form @submit.prevent="submitOrder">
+        <div class="form-group">
+            <label>Nomor DO (Otomatis):</label>
+            <input type="text" :value="generatedDoNumber" disabled style="background-color: #e9ecef;">
         </div>
-    </div>
-</body>
-</html>
+
+        <div class="form-group">
+            <label>NIM:</label>
+            <input type="text" v-model="form.nim" placeholder="Contoh: 041234567" required>
+        </div>
+
+        <div class="form-group">
+            <label>Nama Mahasiswa:</label>
+            <input type="text" v-model="form.nama" placeholder="Nama Lengkap" required>
+        </div>
+
+        <div class="form-group">
+            <label>Ekspedisi Pengiriman:</label>
+            <select v-model="form.ekspedisi" required>
+                <option value="">-- Pilih Ekspedisi --</option>
+                <option v-for="e in ekspedisi" :value="e.kode">{{ e.nama }}</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Paket Bahan Ajar:</label>
+            <select v-model="selectedPaket" required>
+                <option :value="null">-- Pilih Paket Bahan Ajar --</option>
+                <option v-for="p in paket" :value="p">[{{ p.kode }}] {{ p.nama }}</option>
+            </select>
+        </div>
+
+        <!-- Detail isi paket yang muncul dinamis setelah memilih select paket -->
+        <div v-if="selectedPaket" style="background-color: #f1f3f5; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+            <h5>Detail Isi Paket:</h5>
+            <ul>
+                <li v-for="isi in selectedPaket.isi">{{ isi }}</li>
+            </ul>
+            <p><strong>Total Harga:</strong> {{ selectedPaket.harga | rupiah }}</p>
+        </div>
+
+        <button type="submit" style="background-color: #198754; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">
+            Submit Order
+        </button>
+    </form>
+</div>
