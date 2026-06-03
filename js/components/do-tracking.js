@@ -1,6 +1,9 @@
+// do-tracking.js
 Vue.component('do-tracking', {
     template: '#tpl-tracking',
-    props: {
-        trackingData: { type: Array, required: true }
+    props: ['data'],
+    data() { return { search: '' }; },
+    methods: {
+        doSearch() { alert('Mencari: ' + this.search); }
     }
 });
