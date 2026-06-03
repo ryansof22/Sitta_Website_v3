@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SITTA UT - Pemesanan Bahan Ajar</title>
+    <!-- Hubungkan ke gaya global -->
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Struktur Navigasi Berdasarkan State Tab di Root -->
+        <header>
+            <h2>Sistem Manajemen & Pemesanan Bahan Ajar (SITTA)</h2>
+            <nav>
+                <button :class="{ active: tab === 'stok' }" @click="tab = 'stok'">Stok Bahan Ajar</button>
+                <button :class="{ active: tab === 'tracking' }" @click="tab = 'tracking'">Tracking DO</button>
+                <button :class="{ active: tab === 'order' }" @click="tab = 'order'">Pemesanan Baru</button>
+            </nav>
+        </header>
+
+        <main>
+            <!-- Komponen Stok Bahan Ajar -->
+            <section v-show="tab === 'stok'">
+                <ba-stock-table 
+                    :items="state.stok"
+                    :upbjj-list="state.upbjjList"
+                    :kategori-list="state.kategoriList"
+                    @update-stok="handleUpdateStok">
+                </ba-stock-table>
+            </section>
+
+            <!-- Komponen Tracking Delivery Order (DO) -->
+            <section v-show="tab === 'tracking'">
+                <do-tracking 
+                    :tracking-data="state.tracking"
+                    @add-progress="handleAddProgress">
+                </do-tracking>
+            </section>
+
+            <!-- Komponen Formulir Pemesanan -->
+            <section v-show="tab === 'order'">
+                <order-form 
+                    :paket="state.paket" 
+                    :ekspedisi="state.pengirimanList"
+                    @created="handleNewOrder">
+                </order-form>
+            </section>
+        </main>
+
+        <!-- Komponen Global Modal untuk Alert / Form Kecil -->
+        <app-modal ref="modal"></app-modal>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TEMPLATES KOMPONEN (ID harus konsisten dan menggunakan kebab-case) -->
+    <!-- ========================================================================= -->
+
+    <!-- Template untuk ba-stock-table -->
+    <template id="tpl-stock">
+        <div class="component-box">
+            <h3>Daftar Stok Bahan Ajar</h3>
+            <!-- Area Filter dan Form akan kamu kembangkan di sini -->
+            <table>
+                <thead>
+                    <tr>
+                        <th>Kode/Judul</th>
+                        <th>Kategori</th>
+                        <th>UT-Daerah</th>
+                        <th>Rak</th>
+                        <th>Harga</th>
+                        <th>Stok (Qty)</th>
+                        <th>Safety</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(item, index) in items" :key="item.kode">
+                        <td>{{ item.kode }} - {{ item.judul }}</td>
+                        <td>{{ item.kategori }}</td>
+                        <td>{{ item.upbjj }}</td>
+                        <td>{{ item.lokasiRak }}</td>
+                        <td>{{ item.harga | currency }}</td>
+                        <td>{{ item.qty | qtyUnit }}</td>
+                        <td>{{ item.safety | qtyUnit }}</td>
+                        <td>
+                            <!-- Status Badge Component Placeholder -->
+                            <status-badge :qty="item.qty" :safety="item.safety"></status-badge>
+                        </td>
+                        <td>
+                            <button @click="$emit('update-stok', item)">Edit</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </template>
+
+    <!-- Template untuk status-badge -->
+    <template id="tpl-badge">
+        <span :class="badgeClass">{{ badgeText }}</span>
+    </template>
+
+    <!-- Template untuk do-tracking -->
+    <template id="tpl-tracking">
+        <div class="component-box">
+            <h3>Tracking Delivery Order (DO)</h3>
+            <p>Placeholder untuk fitur pencarian & riwayat pengiriman DO.</p>
+        </div>
+    </template>
+
+    <!-- Template untuk order-form -->
+    <template id="tpl-order">
+        <div class="component-box">
+            <h3>Formulir Pemesanan Bahan Ajar</h3>
+            <p>Placeholder untuk input DO Baru, NIM, Nama, Ekspedisi, dan Detail Paket.</p>
+        </div>
+    </template>
+
+    <!-- Template untuk app-modal -->
+    <template id="tpl-modal">
+        <div v-if="isOpen" class="modal-overlay">
+            <div class="modal-content">
+                <h4>{{ title }}</h4>
+                <p>{{ message }}</p>
+                <div class="modal-actions">
+                    <button @click="close">Batal</button>
+                    <button @click="confirm">Konfirmasi</button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- ========================================================================= -->
+    <!-- SCRIPTS (Urutan pemanggilan sangat penting!) -->
+    <!-- ========================================================================= -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    
+    <!-- Data Service (API fetch) -->
+    <script src="js/services/api.js"></script>
+    
+    <!-- Register Komponen Terpisah -->
+    <script src="js/components/status-badge.js"></script>
+    <script src="js/components/stock-table.js"></script>
+    <script src="js/components/do-tracking.js"></script>
+    <script src="js/components/order-form.js"></script>
+    <script src="js/components/app-modal.js"></script>
+    
+    <!-- Inisialisasi Root Instance -->
+    <script src="js/app.js"></script>
+</body>
+</html>
