@@ -1,153 +1,135 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SITTA UT - Pemesanan Bahan Ajar</title>
-    <!-- Hubungkan ke gaya global -->
+    <title>SITTA UT - Portfolio Ryan</title>
     <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        /* CSS Sederhana untuk testing langsung */
+        .badge-success { color: green; font-weight: bold; }
+        .badge-warning { color: orange; font-weight: bold; }
+        .badge-danger { color: red; font-weight: bold; }
+        .active { background-color: #ddd; }
+        .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; }
+        .modal-content { background: white; padding: 20px; border-radius: 8px; }
+    </style>
 </head>
 <body>
     <div id="app">
-        <!-- Struktur Navigasi Berdasarkan State Tab di Root -->
-        <header>
-            <h2>Sistem Manajemen & Pemesanan Bahan Ajar (SITTA)</h2>
-            <nav>
-                <button :class="{ active: tab === 'stok' }" @click="tab = 'stok'">Stok Bahan Ajar</button>
-                <button :class="{ active: tab === 'tracking' }" @click="tab = 'tracking'">Tracking DO</button>
-                <button :class="{ active: tab === 'order' }" @click="tab = 'order'">Pemesanan Baru</button>
-            </nav>
-        </header>
+        <nav>
+            <button :class="{active: tab === 'stok'}" @click="tab='stok'">Stok</button>
+            <button :class="{active: tab === 'tracking'}" @click="tab='tracking'">Tracking DO</button>
+            <button :class="{active: tab === 'order'}" @click="tab='order'">Pemesanan</button>
+        </nav>
 
-        <main>
-            <!-- Komponen Stok Bahan Ajar -->
-            <section v-show="tab === 'stok'">
-                <ba-stock-table 
-                    :items="state.stok"
-                    :upbjj-list="state.upbjjList"
-                    :kategori-list="state.kategoriList"
-                    @update-stok="handleUpdateStok">
-                </ba-stock-table>
-            </section>
+        <section v-show="tab === 'stok'">
+            <ba-stock-table :items="state.stok" :upbjj-list="state.upbjjList" :kategori-list="state.kategoriList"></ba-stock-table>
+        </section>
 
-            <!-- Komponen Tracking Delivery Order (DO) -->
-            <section v-show="tab === 'tracking'">
-                <do-tracking 
-                    :tracking-data="state.tracking"
-                    @add-progress="handleAddProgress">
-                </do-tracking>
-            </section>
+        <section v-show="tab === 'tracking'">
+            <do-tracking :data="state.tracking"></do-tracking>
+        </section>
 
-            <!-- Komponen Formulir Pemesanan -->
-            <section v-show="tab === 'order'">
-                <order-form 
-                    :paket="state.paket" 
-                    :ekspedisi="state.pengirimanList"
-                    @created="handleNewOrder">
-                </order-form>
-            </section>
-        </main>
+        <section v-show="tab === 'order'">
+            <order-form :paket="state.paket" :ekspedisi="state.pengirimanList"></order-form>
+        </section>
 
-        <!-- Komponen Global Modal untuk Alert / Form Kecil -->
         <app-modal ref="modal"></app-modal>
     </div>
 
-    <!-- ========================================================================= -->
-    <!-- TEMPLATES KOMPONEN (ID harus konsisten dan menggunakan kebab-case) -->
-    <!-- ========================================================================= -->
-
-    <!-- Template untuk ba-stock-table -->
     <template id="tpl-stock">
-        <div class="component-box">
-            <h3>Daftar Stok Bahan Ajar</h3>
-            <!-- Area Filter dan Form akan kamu kembangkan di sini -->
-            <table>
+        <div>
+            <h2>Stok Bahan Ajar</h2>
+            <div>
+                <select v-model="filterUPBJJ">
+                    <option value="">Semua UT-Daerah</option>
+                    <option v-for="u in upbjjList" :value="u">{{u}}</option>
+                </select>
+                <select v-if="filterUPBJJ" v-model="filterKategori">
+                    <option value="">Semua Kategori</option>
+                    <option v-for="k in kategoriList" :value="k">{{k}}</option>
+                </select>
+                <button @click="resetFilter">Reset</button>
+            </div>
+
+            <table border="1" style="width:100%; margin-top:10px;">
                 <thead>
                     <tr>
-                        <th>Kode/Judul</th>
+                        <th @click="sortBy('judul')">Judul</th>
                         <th>Kategori</th>
-                        <th>UT-Daerah</th>
-                        <th>Rak</th>
-                        <th>Harga</th>
-                        <th>Stok (Qty)</th>
-                        <th>Safety</th>
+                        <th>UPBJJ</th>
+                        <th @click="sortBy('qty')">Stok</th>
                         <th>Status</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(item, index) in items" :key="item.kode">
-                        <td>{{ item.kode }} - {{ item.judul }}</td>
-                        <td>{{ item.kategori }}</td>
-                        <td>{{ item.upbjj }}</td>
-                        <td>{{ item.lokasiRak }}</td>
-                        <td>{{ item.harga | currency }}</td>
-                        <td>{{ item.qty | qtyUnit }}</td>
-                        <td>{{ item.safety | qtyUnit }}</td>
-                        <td>
-                            <!-- Status Badge Component Placeholder -->
+                    <tr v-for="item in filteredItems">
+                        <td>{{item.kode}} - {{item.judul}}</td>
+                        <td>{{item.kategori}}</td>
+                        <td>{{item.upbjj}}</td>
+                        <td>{{item.qty | unit}} (Safety: {{item.safety}})</td>
+                        <td :title="item.catatanHTML">
                             <status-badge :qty="item.qty" :safety="item.safety"></status-badge>
                         </td>
-                        <td>
-                            <button @click="$emit('update-stok', item)">Edit</button>
-                        </td>
+                        <td><button @click="deleteItem(item)">Hapus</button></td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </template>
 
-    <!-- Template untuk status-badge -->
     <template id="tpl-badge">
-        <span :class="badgeClass">{{ badgeText }}</span>
+        <span :class="status.class">{{status.text}}</span>
     </template>
 
-    <!-- Template untuk do-tracking -->
     <template id="tpl-tracking">
-        <div class="component-box">
-            <h3>Tracking Delivery Order (DO)</h3>
-            <p>Placeholder untuk fitur pencarian & riwayat pengiriman DO.</p>
-        </div>
-    </template>
-
-    <!-- Template untuk order-form -->
-    <template id="tpl-order">
-        <div class="component-box">
-            <h3>Formulir Pemesanan Bahan Ajar</h3>
-            <p>Placeholder untuk input DO Baru, NIM, Nama, Ekspedisi, dan Detail Paket.</p>
-        </div>
-    </template>
-
-    <!-- Template untuk app-modal -->
-    <template id="tpl-modal">
-        <div v-if="isOpen" class="modal-overlay">
-            <div class="modal-content">
-                <h4>{{ title }}</h4>
-                <p>{{ message }}</p>
-                <div class="modal-actions">
-                    <button @click="close">Batal</button>
-                    <button @click="confirm">Konfirmasi</button>
+        <div>
+            <h2>Tracking Delivery Order</h2>
+            <input type="text" v-model="search" placeholder="Cari No DO / NIM" @keyup.enter="doSearch" @keyup.esc="search=''">
+            <div v-for="(val, key) in data" :key="key">
+                <div v-for="(info, id) in val">
+                    <p><strong>{{id}}</strong> - {{info.nama}} ({{info.status}})</p>
                 </div>
             </div>
         </div>
     </template>
 
-    <!-- ========================================================================= -->
-    <!-- SCRIPTS (Urutan pemanggilan sangat penting!) -->
-    <!-- ========================================================================= -->
+    <template id="tpl-order">
+        <div>
+            <h2>Formulir Pemesanan</h2>
+            <form @submit.prevent="submitOrder">
+                <label>NIM: <input type="text" v-model="form.nim" required></label><br>
+                <label>Nama: <input type="text" v-model="form.nama" required></label><br>
+                <label>Paket: 
+                    <select v-model="selectedPaket">
+                        <option v-for="p in paket" :value="p">{{p.nama}}</option>
+                    </select>
+                </label><br>
+                <div v-if="selectedPaket">
+                    <p>Isi: {{selectedPaket.isi.join(', ')}} | Harga: {{selectedPaket.harga | rupiah}}</p>
+                </div>
+                <button type="submit">Buat Pesanan</button>
+            </form>
+        </div>
+    </template>
+
+    <template id="tpl-modal">
+        <div v-if="visible" class="modal-overlay">
+            <div class="modal-content">
+                <p>{{message}}</p>
+                <button @click="visible=false">Tutup</button>
+            </div>
+        </div>
+    </template>
+
     <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
-    
-    <!-- Data Service (API fetch) -->
     <script src="js/services/api.js"></script>
-    
-    <!-- Register Komponen Terpisah -->
     <script src="js/components/status-badge.js"></script>
     <script src="js/components/stock-table.js"></script>
     <script src="js/components/do-tracking.js"></script>
     <script src="js/components/order-form.js"></script>
     <script src="js/components/app-modal.js"></script>
-    
-    <!-- Inisialisasi Root Instance -->
     <script src="js/app.js"></script>
 </body>
 </html>
