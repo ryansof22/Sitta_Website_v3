@@ -1,27 +1,26 @@
 Vue.component('app-modal', {
-  template: '#tpl-modal',
-  data() {
-    return {
-      isOpen: false,
-      title: '',
-      message: '',
-      resolvePromise: null
-    };
-  },
-  methods: {
-    show(title, message) {
-      this.title = title;
-      this.message = message;
-      this.isOpen = true;
-      return new Promise((resolve) => {
-        this.resolvePromise = resolve;
-      });
+    template: '#tpl-modal',
+    data() { 
+        return { 
+            isOpen: false, // Gunakan isOpen agar sesuai dengan template
+            title: '',
+            message: '',
+            onConfirmCallback: null
+        }; 
     },
-    close(result) {
-      this.isOpen = false;
-      if (this.resolvePromise) {
-        this.resolvePromise(result);
-      }
+    methods: {
+        open(title, message, onConfirm) {
+            this.title = title;
+            this.message = message;
+            this.onConfirmCallback = onConfirm;
+            this.isOpen = true; 
+        },
+        confirm() {
+            if (this.onConfirmCallback) this.onConfirmCallback();
+            this.isOpen = false;
+        },
+        close() {
+            this.isOpen = false;
+        }
     }
-  }
 });
