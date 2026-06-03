@@ -15,16 +15,10 @@ new Vue({
   },
   async created() {
     try {
-      // Membaca data JSON via service api.js[cite: 1]
-      const data = await ApiService.fetchData();
-      this.state.upbjjList = data.upbjjList || [];
-      this.state.kategoriList = data.kategoriList || [];
-      this.state.pengirimanList = data.pengirimanList || [];
-      this.state.paket = data.paket || [];
-      this.state.stok = data.stok || [];
-      this.state.tracking = data.tracking || [];
+        const data = await ApiService.fetchData(); // Sesuaikan dengan api.js
+        this.state = data;
     } catch (e) {
-      alert('Sistem mendeteksi kegagalan sinkronisasi berkas dummy JSON.');
+        console.error("Gagal memuat data", e);
     }
   },
   methods: {
