@@ -1,21 +1,62 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>SITTA UT - Portal Pemesanan</title>
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-    <div class="navbar">
-        <span class="gold-text">SITTA UT APPS</span>
-    </div>
-    <div style="text-align: center; margin-top: 100px;">
-        <h1 class="gold-text">Selamat Datang di Sistem SITTA UT</h1>
-        <p>Silakan pilih menu layanan di bawah ini:</p>
-        <div style="margin-top: 30px;">
-            <a href="stok.html"><button>Manajemen Stok Bahan Ajar</button></a>
-            <a href="tracking.html"><button>Tracking Delivery Order</button></a>
+<div class="component-box">
+    <h3>Daftar Stok Bahan Ajar</h3>
+    
+    <!-- Filter Section -->
+    <div style="margin-bottom: 15px; display: flex; gap: 10px;">
+        <div>
+            <label>UT-Daerah: </label>
+            <select v-model="filterUPBJJ">
+                <option value="">Semua UT-Daerah</option>
+                <option v-for="u in upbjjList" :value="u">{{ u }}</option>
+            </select>
         </div>
+        
+        <!-- Dependent Option: Hanya muncul jika UT-Daerah dipilih -->
+        <div v-if="filterUPBJJ">
+            <label>Kategori: </label>
+            <select v-model="filterKategori">
+                <option value="">Semua Kategori</option>
+                <option v-for="k in kategoriList" :value="k">{{ k }}</option>
+            </select>
+        </div>
+        
+        <button @click="resetFilter" style="padding: 5px 10px;">Reset Filter</button>
     </div>
-</body>
-</html>
+
+    <!-- Main Stock Table -->
+    <table>
+        <thead>
+            <tr>
+                <th @click="sortBy('judul')">Kode / Judul Mata Kuliah ⇅</th>
+                <th>Kategori</th>
+                <th>UT-Daerah</th>
+                <th>Lokasi Rak</th>
+                <th @click="sortBy('harga')">Harga ⇅</th>
+                <th @click="sortBy('qty')">Jumlah Stok ⇅</th>
+                <th>Safety Stock</th>
+                <th>Status</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-for="item in filteredItems" :key="item.kode">
+                <td><strong>{{ item.kode }}</strong> - {{ item.judul }}</td>
+                <td>{{ item.kategori }}</td>
+                <td>{{ item.upbjj }}</td>
+                <td>{{ item.lokasiRak }}</td>
+                <td>{{ item.harga | rupiah }}</td>
+                <td>{{ item.qty | unit }}</td>
+                <td>{{ item.safety | unit }}</td>
+                <td>
+                    <!-- Mouse hover event preview sesuai arahan soal -->
+                    <span class="tooltip-target" :title="item.catatanHTML">
+                        <status-badge :qty="item.qty" :safety="item.safety"></status-badge>
+                    </span>
+                </td>
+                <td>
+                    <button @click="deleteItem(item)" style="color: red; cursor: pointer;">Delete</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
