@@ -166,3 +166,11 @@ tr:hover {
   font-size: 0.8rem;
   font-weight: bold;
 }
+
+button {
+    transition: background-color 0.3s ease, transform 0.2s active;
+}
+
+button:active {
+    transform: scale(0.95);
+}
