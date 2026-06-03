@@ -1,14 +1,11 @@
 Vue.component('do-tracking', {
-  template: '#tpl-tracking',
-  props: {
-    trackingList: { type: Array, required: true }
-  },
-  data() {
-    return {
-      searchQuery: '',
-      activeDO: null,
-      newStatusText: ''
-    };
+    template: '#tpl-tracking',
+    props: ['trackingList'], // Sesuaikan dengan index.html
+    data() { 
+        return { 
+            searchQuery: '', // Sesuaikan dengan do-tracking.html
+            searchResult: null 
+        };
   },
   methods: {
     search() {
