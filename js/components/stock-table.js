@@ -1,5 +1,7 @@
+// js/components/stock-table.js
 Vue.component('ba-stock-table', {
-    template: '#tpl-stock',
+    // Membaca template eksternal secara dinamis
+    template: '#tpl-stock', 
     props: ['items', 'upbjjList', 'kategoriList'],
     data() {
         return {
@@ -10,21 +12,38 @@ Vue.component('ba-stock-table', {
     },
     computed: {
         filteredItems() {
-            let data = this.items.filter(i => {
-                return (this.filterUPBJJ === '' || i.upbjj === this.filterUPBJJ) &&
-                       (this.filterKategori === '' || i.kategori === this.filterKategori);
-            });
-            if (this.sortKey) {
-                data.sort((a, b) => a[this.sortKey] > b[this.sortKey] ? 1 : -1);
+            let result = this.items;
+            if (this.filterUPBJJ) {
+                result = result.filter(item => item.upbjj === this.filterUPBJJ);
             }
-            return data;
+            if (this.filterKategori) {
+                result = result.filter(item => item.kategori === this.filterKategori);
+            }
+            if (this.sortKey) {
+                result.sort((a, b) => (a[this.sortKey] > b[this.sortKey] ? 1 : -1));
+            }
+            return result;
         }
     },
     methods: {
-        resetFilter() { this.filterUPBJJ = ''; this.filterKategori = ''; },
-        sortBy(key) { this.sortKey = key; },
+        resetFilter() {
+            this.filterUPBJJ = '';
+            this.filterKategori = '';
+        },
+        sortBy(key) {
+            this.sortKey = key;
+        },
         deleteItem(item) {
-            this.$root.$refs.modal.show(`Menghapus ${item.judul}...`);
+            // Memanggil modal global lewat root instance
+            this.$root.$refs.modal.open(
+                'Konfirmasi Penghapusan',
+                `Apakah Anda yakin ingin menghapus data stok untuk buku "${item.judul}"?`,
+                () => {
+                    // Logic callback saat user klik konfirmasi hapus
+                    const index = this.items.indexOf(item);
+                    if (index > -1) this.items.splice(index, 1);
+                }
+            );
         }
     }
 });
