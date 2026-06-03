@@ -1,71 +1,55 @@
+// js/app.js
+
+// 1. Registrasi Global Filters untuk formatting teks
+Vue.filter('currency', function (value) {
+    if (!value) return 'Rp 0';
+    return 'Rp ' + value.toLocaleString('id-ID');
+});
+
+Vue.filter('qtyUnit', function (value) {
+    if (value === undefined || value === null) return '0 buah';
+    return value + ' buah';
+});
+
+// 2. Root Vue Instance
 new Vue({
     el: '#app',
-    data: {
-        // Dummy data sesuai dataBahanAjar.js
-        upbjjList: sourceData.upbjjList,
-        kategoriList: sourceData.kategoriList,
-        stok: sourceData.stok,
-        // ... sisa data state seperti filter dan form tetap sama ...
-        filterUPBJJ: '',
-        filterKategori: '',
-        isCritical: false,
-        sortBy: 'judul',
-        newStok: { kode: '', judul: '', upbjj: '', qty: 0, safety: 0 },
-        errorMsg: ''
+    data() {
+        return {
+            tab: 'stok', // State navigasi: 'stok' | 'tracking' | 'order'
+            state: {
+                upbjjList: [],
+                kategoriList: [],
+                pengirimanList: [],
+                paket: [],
+                stok: [],
+                tracking: []
+            }
+        };
     },
-    computed: {
-        // Implementasi poin 1.2 & 1.4: List Rendering & Computed [cite: 87, 89]
-        filteredStok() {
-            let result = this.stok.filter(item => {
-                let matchUPBJJ = this.filterUPBJJ ? item.upbjj === this.filterUPBJJ : true;
-                let matchKat = this.filterKategori ? item.kategori === this.filterKategori : true;
-                let matchCrit = this.isCritical ? (item.qty < item.safety || item.qty === 0) : true;
-                return matchUPBJJ && matchKat && matchCrit;
-            });
-
-            return result.sort((a, b) => {
-                if (this.sortBy === 'qty' || this.sortBy === 'harga') return a[this.sortBy] - b[this.sortBy];
-                return a.judul.localeCompare(b.judul);
-            });
+    async created() {
+        // Fetch data saat root instance di-mount
+        const data = await ApiService.fetchData();
+        if (data) {
+            this.state = data;
         }
     },
     methods: {
-        getStatus(item) {
-            if (item.qty === 0) return 'Kosong';
-            if (item.qty < item.safety) return 'Menipis';
-            return 'Aman';
+        handleUpdateStok(item) {
+            // Contoh interaksi dengan global modal
+            this.$refs.modal.open(
+                'Edit Stok Bahan Ajar',
+                `Apakah Anda ingin mengubah data untuk ${item.judul}?`,
+                () => {
+                    console.log('User mengonfirmasi edit untuk:', item.kode);
+                }
+            );
         },
-        statusClass(item) {
-            return {
-                'status-aman': item.qty >= item.safety && item.qty > 0,
-                'status-menipis': item.qty < item.safety && item.qty > 0,
-                'status-kosong': item.qty === 0
-            };
+        handleNewOrder(newOrder) {
+            console.log('Order baru diterima:', newOrder);
         },
-        tambahStok() {
-            if (!this.newStok.kode || !this.newStok.judul) {
-                this.errorMsg = "Data tidak boleh kosong!";
-                return;
-            }
-            this.stok.push({...this.newStok, kategori: 'MK Wajib', catatanHTML: '-'});
-            this.newStok = { kode: '', judul: '', upbjj: '', qty: 0, safety: 0 };
-            this.errorMsg = "";
-        },
-        resetFilter() {
-            this.filterUPBJJ = '';
-            this.filterKategori = '';
-            this.isCritical = false;
-        }
-    },
-    watch: {
-        // Implementasi poin 1.5: Minimal 2 Watchers [cite: 90]
-        filterUPBJJ(newVal) {
-            if (!newVal) this.filterKategori = '';
-            console.log("Filter UPBJJ berubah ke: " + newVal);
-        },
-        stok: {
-            handler() { console.log("Data stok terupdate!"); },
-            deep: true
+        handleAddProgress(progressData) {
+            console.log('Progress DO bertambah:', progressData);
         }
     }
 });
