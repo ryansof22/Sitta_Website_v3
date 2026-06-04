@@ -5,12 +5,12 @@ Vue.component('status-badge', {
   computed: {
     badgeText() {
       if (this.qty === 0) return 'Kosong';
-      if (this.qty < this.safety) return 'Menipis';
+      if (this.qty <= this.safety) return 'Menipis';
       return 'Aman';
     },
     badgeClass() {
       if (this.qty === 0) return 'badge-danger';
-      if (this.qty < this.safety) return 'badge-warning';
+      if (this.qty <= this.safety) return 'badge-danger';
       return 'badge-safe';
     }
   }
