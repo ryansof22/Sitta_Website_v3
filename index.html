@@ -127,18 +127,48 @@
         </tbody>
       </table>
 
+<!-- Form Input/Edit (Enter to Save) -->
       <div style="margin-top:30px; padding-top:20px; border-top:1px solid #333;">
         <h4>{{ isEditMode ? 'Edit Data Bahan Ajar' : 'Tambah Stok Baru' }}</h4>
-        <form @submit.prevent="save" class="grid-2">
-          <input type="text" v-model="form.kode" placeholder="Kode MK" :disabled="isEditMode" required>
-          <input type="text" v-model="form.judul" placeholder="Judul Buku" required>
-          <select v-model="form.upbjj" required>
-             <option value="">-- Wilayah UPBJJ --</option>
-             <option v-for="u in upbjjList" :value="u">{{u}}</option>
-          </select>
-          <input type="number" v-model.number="form.qty" placeholder="Jumlah Stok" required>
-          <button type="submit" class="btn-gold">{{ isEditMode ? 'Update' : 'Simpan' }} Data</button>
-          <button v-if="isEditMode" type="button" @click="isEditMode = false; resetForm()" class="btn-gold" style="background:#444;">Batal</button>
+        <form @submit.prevent="save">
+          <!-- Menggunakan grid 3 kolom agar input tersusun simetris dan rapi -->
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 15px;">
+            <div class="form-group">
+              <label>Kode MK</label>
+              <input type="text" v-model="form.kode" placeholder="Contoh: EKMA4116" :disabled="isEditMode" required>
+            </div>
+            <div class="form-group">
+              <label>Judul Buku</label>
+              <input type="text" v-model="form.judul" placeholder="Masukkan judul bahan ajar" required>
+            </div>
+            <div class="form-group">
+              <label>Wilayah UPBJJ</label>
+              <select v-model="form.upbjj" required>
+                 <option value="">-- Pilih Wilayah UPBJJ --</option>
+                 <option v-for="u in upbjjList" :value="u">{{ u }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Kategori Mata Kuliah</label>
+              <select v-model="form.kategori" required>
+                 <option value="">-- Pilih Kategori --</option>
+                 <option v-for="k in kategoriList" :value="k">{{ k }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Harga Satuan (Rp)</label>
+              <input type="number" v-model.number="form.harga" placeholder="Masukkan harga nominal" required>
+            </div>
+            <div class="form-group">
+              <label>Jumlah Stok (Qty)</label>
+              <input type="number" v-model.number="form.qty" placeholder="Masukkan jumlah kuantitas" required>
+            </div>
+          </div>
+          
+          <div style="text-align: right;">
+            <button v-if="isEditMode" type="button" @click="isEditMode = false; resetForm()" class="btn-gold" style="background:#444; color: #fff; margin-right: 10px;">Batal</button>
+            <button type="submit" class="btn-gold">{{ isEditMode ? 'Update' : 'Simpan' }} Data (Enter)</button>
+          </div>
         </form>
       </div>
     </div>
