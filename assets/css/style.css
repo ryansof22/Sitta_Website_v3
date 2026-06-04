@@ -161,10 +161,29 @@ tr:hover {
 }
 
 .badge {
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.8rem;
+  padding: 4px 12px;
+  border-radius: 20px;
   font-weight: bold;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  display: inline-block;
+  text-align: center;
+  min-width: 80px;
+}
+
+.badge-safe {
+  background-color: #2ecc71;
+  color: #ffffff;
+}
+
+.badge-warning {
+  background-color: #f1c40f;
+  color: #000000;
+}
+
+.badge-danger {
+  background-color: #e74c3c;
+  color: #ffffff;
 }
 
 button {
