@@ -204,11 +204,11 @@
     </div>
   </template>
 
-  <template id="tpl-badge">
-    <span :class="['badge', badgeClass]" style="padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; color:#000; font-weight:bold;">
-      {{ badgeText }}
-    </span>
-  </template>
+<template id="tpl-badge">
+  <span :class="['badge', badgeClass]">
+    {{ badgeText }}
+  </span>
+</template>
 
   <template id="tpl-modal">
     <div v-if="isOpen" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); display:flex; justify-content:center; align-items:center; z-index:9999;">
