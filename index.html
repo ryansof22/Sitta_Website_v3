@@ -4,10 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SITTA UT - Portal Pemesanan Bahan Ajar</title>
+  
   <link rel="stylesheet" href="assets/css/style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+  
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Montserrat', sans-serif; }
+    /* Memastikan transisi antar tab mulus */
+    .v-enter-active, .v-leave-active { transition: opacity 0.3s; }
+    .v-enter, .v-leave-to { opacity: 0; }
   </style>
 </head>
 <body>
@@ -19,37 +24,39 @@
         <small style="color: var(--gold-light)">Sistem Informasi Transaksi Tiras Bahan Ajar</small>
       </div>
       <nav>
-        <button :class="{ active: tab === 'stok' }" @click="tab = 'stok'">Stok</button>
-        <button :class="{ active: tab === 'tracking' }" @click="tab = 'tracking'">Tracking DO</button>
+        <button :class="{ active: tab === 'stok' }" @click="tab = 'stok'">Manajemen Stok</button>
+        <button :class="{ active: tab === 'tracking' }" @click="tab = 'tracking'">Tracking & Order</button>
       </nav>
     </header>
 
     <main>
-      <section v-show="tab === 'stok'">
-        <ba-stock-table 
-          :items="state.stok" 
-          :upbjj-list="state.upbjjList"
-          :kategori-list="state.kategoriList"
-          @update-stock="handleUpdateStock"
-          @delete-stock="handleDeleteStock"
-          @create-stock="handleCreateStock">
-        </ba-stock-table>
-      </section>
+      <transition mode="out-in">
+        <section v-if="tab === 'stok'" key="stok">
+          <ba-stock-table 
+            :items="state.stok" 
+            :upbjj-list="state.upbjjList"
+            :kategori-list="state.kategoriList"
+            @update-stock="handleUpdateStock"
+            @delete-stock="handleDeleteStock"
+            @create-stock="handleCreateStock">
+          </ba-stock-table>
+        </section>
 
-      <section v-show="tab === 'tracking'">
-        <div class="grid-2">
-          <div>
-            <do-tracking :tracking-list="state.tracking"></do-tracking>
+        <section v-else-if="tab === 'tracking'" key="tracking">
+          <div class="grid-2">
+            <div>
+              <do-tracking :tracking-list="state.tracking"></do-tracking>
+            </div>
+            <div>
+              <order-form 
+                :paket-list="state.paket" 
+                :ekspedisi-list="state.pengirimanList"
+                @add-do="handleNewDO">
+              </order-form>
+            </div>
           </div>
-          <div>
-            <order-form 
-              :paket-list="state.paket" 
-              :ekspedisi-list="state.pengirimanList"
-              @add-do="handleNewDO">
-            </order-form>
-          </div>
-        </div>
-      </section>
+        </section>
+      </transition>
     </main>
 
     <app-modal ref="modal"></app-modal>
@@ -62,14 +69,14 @@
       <div class="grid-2" style="margin-top: 15px; background: #1a1a1a; padding: 15px; border-radius: 6px;">
         <div>
           <div class="form-group">
-            <label>Filter Wilayah UPBJJ</label>
+            <label>Filter UT-Daerah</label>
             <select v-model="filters.upbjj">
               <option value="">-- Semua Wilayah --</option>
               <option v-for="u in upbjjList" :key="u" :value="u">{{ u }}</option>
             </select>
           </div>
           <div class="form-group" v-if="filters.upbjj">
-            <label>Filter Kategori (Dependent)</label>
+            <label>Filter Kategori Mata Kuliah</label>
             <select v-model="filters.kategori">
               <option value="">-- Semua Kategori --</option>
               <option v-for="k in kategoriList" :key="k" :value="k">{{ k }}</option>
@@ -78,7 +85,7 @@
         </div>
         <div>
           <div class="form-group">
-            <label>Urutkan</label>
+            <label>Urutkan Berdasarkan</label>
             <select v-model="sortKey">
               <option value="judul">Judul Buku</option>
               <option value="qty">Jumlah Stok</option>
@@ -87,7 +94,7 @@
           </div>
           <label style="display:inline-flex; align-items:center; cursor:pointer; margin-top:10px;">
             <input type="checkbox" v-model="filters.warningStock" style="width:auto; margin-right:8px;">
-            <span style="color: var(--color-warning); font-size:0.85rem;">Hanya Stok Menipis/Kosong</span>
+            <span style="color: var(--color-warning); font-size:0.85rem;">Hanya Stok Kritikal</span>
           </label>
         </div>
       </div>
@@ -105,33 +112,33 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="item in filteredAndSortedItems" :key="item.kode">
+          <tr v-for="item in filteredItems" :key="item.kode">
             <td>{{ item.kode }}</td>
-            <td :title="item.lokasiRak"><strong>{{ item.judul }}</strong></td>
+            <td><strong>{{ item.judul }}</strong></td>
             <td>{{ item.upbjj }}</td>
             <td>{{ item.harga | formatCurrency }}</td>
-            <td>{{ item.qty | formatSatuan }}</td>
+            <td>{{ item.qty }} Eks</td>
             <td><status-badge :qty="item.qty" :safety="item.safety"></status-badge></td>
             <td>
-              <button @click="triggerEdit(item)" style="background:none; border:none; color:var(--gold-primary); cursor:pointer;">Edit</button> |
-              <button @click="triggerDelete(item.kode)" style="background:none; border:none; color:var(--color-danger); cursor:pointer;">Hapus</button>
+              <button @click="edit(item)" class="btn-gold" style="padding: 5px 10px; font-size:0.7rem;">Edit</button>
+              <button @click="remove(item.kode)" class="btn-gold" style="padding: 5px 10px; font-size:0.7rem; background:var(--color-danger);">Hapus</button>
             </td>
           </tr>
         </tbody>
       </table>
 
-      <div class="card" style="margin-top:30px; border-top: 1px solid var(--gold-primary);">
-        <h4>{{ isEditMode ? 'Edit Data' : 'Tambah Data Stok Baru' }}</h4>
-        <form @submit.prevent="saveData" class="grid-2">
+      <div style="margin-top:30px; padding-top:20px; border-top:1px solid #333;">
+        <h4>{{ isEditMode ? 'Edit Data Bahan Ajar' : 'Tambah Stok Baru' }}</h4>
+        <form @submit.prevent="save" class="grid-2">
           <input type="text" v-model="form.kode" placeholder="Kode MK" :disabled="isEditMode" required>
           <input type="text" v-model="form.judul" placeholder="Judul Buku" required>
           <select v-model="form.upbjj" required>
-             <option value="">-- Pilih Wilayah --</option>
+             <option value="">-- Wilayah UPBJJ --</option>
              <option v-for="u in upbjjList" :value="u">{{u}}</option>
           </select>
           <input type="number" v-model.number="form.qty" placeholder="Jumlah Stok" required>
-          <button type="submit" class="btn-gold">{{ isEditMode ? 'Update' : 'Simpan' }} (Enter)</button>
-          <button v-if="isEditMode" type="button" @click="cancelEdit" class="btn-gold" style="background:#444;">Batal</button>
+          <button type="submit" class="btn-gold">{{ isEditMode ? 'Update' : 'Simpan' }} Data</button>
+          <button v-if="isEditMode" type="button" @click="isEditMode = false; resetForm()" class="btn-gold" style="background:#444;">Batal</button>
         </form>
       </div>
     </div>
@@ -140,23 +147,29 @@
   <template id="tpl-tracking">
     <div class="card">
       <h3>Lacak Pengiriman (DO)</h3>
-      <div class="form-group" style="display:flex; gap:10px;">
+      <div class="form-group">
         <input 
           type="text" 
-          v-model="searchQuery" 
-          @keyup.enter="search" 
-          @keyup.esc="clearSearch" 
-          placeholder="Cari Nomor DO atau NIM (Enter)...">
+          placeholder="Cari No. DO atau NIM (Enter)..." 
+          v-model="searchQuery"
+          @keyup.enter="search"
+          @keyup.esc="clearSearch">
       </div>
 
-      <div v-if="activeDO" class="card" style="background:#111; margin-top:20px;">
-        <h4>Status: {{ activeDO.status }}</h4>
-        <p>Penerima: {{ activeDO.nama }} ({{ activeDO.nim }})</p>
-        <ul style="font-size:0.85rem; color:var(--text-muted);">
-          <li v-for="p in activeDO.perjalanan">{{ p.waktu }}: {{ p.keterangan }}</li>
+      <div v-if="activeDO" class="card" style="background:#111; border:1px solid var(--gold-primary);">
+        <div style="display:flex; justify-content:space-between;">
+          <h4>{{ activeDO.id }}</h4>
+          <span class="badge badge-safe">{{ activeDO.status }}</span>
+        </div>
+        <p><small>Penerima:</small> {{ activeDO.nama }} ({{ activeDO.nim }})</p>
+        <hr style="border:0; border-top:1px solid #333;">
+        <ul style="font-size:0.8rem; color:var(--text-muted); list-style:none; padding:0;">
+          <li v-for="p in activeDO.perjalanan" style="margin-bottom:8px;">
+            <strong>{{ p.waktu }}</strong>: {{ p.keterangan }}
+          </li>
         </ul>
-        <div style="margin-top:10px;">
-           <input type="text" v-model="newStatusText" placeholder="Update posisi paket..." @keyup.enter="appendProgress">
+        <div class="form-group" style="margin-top:15px;">
+           <input type="text" v-model="newStatusText" placeholder="Update log perjalanan..." @keyup.enter="appendProgress">
         </div>
       </div>
     </div>
@@ -166,28 +179,28 @@
     <div class="card">
       <h3>Buat DO Baru</h3>
       <div class="form-group">
-        <label>NIM</label>
+        <label>NIM Mahasiswa</label>
         <input type="text" v-model="payload.nim">
       </div>
       <div class="form-group">
-        <label>Nama</label>
+        <label>Nama Lengkap</label>
         <input type="text" v-model="payload.nama">
       </div>
       <div class="form-group">
-        <label>Ekspedisi</label>
+        <label>Layanan Ekspedisi</label>
         <select v-model="payload.ekspedisi">
           <option value="">-- Pilih --</option>
           <option v-for="e in ekspedisiList" :value="e.nama">{{ e.nama }}</option>
         </select>
       </div>
       <div class="form-group">
-        <label>Paket</label>
+        <label>Paket Bahan Ajar</label>
         <select v-model="selectedPaketIndex">
           <option value="-1">-- Pilih Paket --</option>
           <option v-for="(p, i) in paketList" :value="i">{{ p.nama }}</option>
         </select>
       </div>
-      <button @click="submitDO" class="btn-gold" style="width:100%">Terbitkan DO</button>
+      <button @click="submitDO" class="btn-gold" style="width:100%; margin-top:10px;">Terbitkan Dokumen DO</button>
     </div>
   </template>
 
@@ -198,13 +211,13 @@
   </template>
 
   <template id="tpl-modal">
-    <div v-if="isOpen" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); display:flex; justify-content:center; align-items:center; z-index:999;">
-      <div class="card" style="width:350px; border:1px solid var(--gold-primary);">
-        <h4 style="color:var(--gold-primary)">{{ title }}</h4>
-        <p style="margin: 15px 0;">{{ message }}</p>
-        <div style="text-align:right;">
-          <button @click="confirm" class="btn-gold" style="background:var(--color-danger); margin-right:10px;">Ya</button>
-          <button @click="close" class="btn-gold" style="background:#555;">Batal</button>
+    <div v-if="isOpen" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); display:flex; justify-content:center; align-items:center; z-index:9999;">
+      <div class="card" style="width:350px; border:1px solid var(--gold-primary); text-align:center;">
+        <h3 style="margin-bottom:15px;">{{ title }}</h3>
+        <p>{{ message }}</p>
+        <div style="margin-top:25px; display:flex; gap:10px; justify-content:center;">
+          <button @click="close(true)" class="btn-gold" style="background:var(--color-danger);">Hapus</button>
+          <button @click="close(false)" class="btn-gold" style="background:#555;">Batal</button>
         </div>
       </div>
     </div>
@@ -212,11 +225,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
   <script src="js/services/api.js"></script>
-  <script src="js/components/app-modal.js"></script>
-  <script src="js/components/status-badge.js"></script>
-  <script src="js/components/stock-table.js"></script>
-  <script src="js/components/do-tracking.js"></script>
-  <script src="js/components/order-form.js"></script>
+  <script src="js/components/app-components.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
